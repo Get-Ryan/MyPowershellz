@@ -1,7 +1,7 @@
 ﻿<#
 .Description
  This script obtains AD accounts with passwords nearing expiration and sends notification emails on certain days prior to expiration.
- Currently, it only sends emails if the password age matches the exact date frame out from expiration.
+ Currently, it only sends emails if the password age matches the exact date-frame out from expiration.
  There is no check to see if an account was missed by the script not being run on a particular day.
 .Notes
  AUTHOR: Ryan Simeone
