@@ -26,7 +26,7 @@ Function CheckPasswordAge() {
 
 ### List Accounts with PasswordLastSet equal to or older than max password age +14 days in the past
 
-    $Accounts = Get-ADUser -filter {Enabled -eq $True -and PasswordNeverExpires -eq $False -and PasswordLastSet -gt 0} –Properties * | where {($_.PasswordLastSet) -lt $14days} | Sort-Object PasswordLastSet
+    $Accounts = Get-ADUser -filter {Enabled -eq $True -and PasswordNeverExpires -eq $False -and PasswordLastSet -gt 0} –Properties * | where {($_.PasswordLastSet) -le $14days} | Sort-Object PasswordLastSet
 
 ### Determine accounts with password ages at previously set timeframes and email reminders to change their password.
     
