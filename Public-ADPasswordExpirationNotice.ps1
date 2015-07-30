@@ -58,18 +58,27 @@ Function SendNotificationEmail([string]$TimeframeString) {
 
 ### Send email with the specified timeframe to the user
 
-    Send-MailMessage -SMTPServer SMTPServer.Domain.com `
-    -To $Account.UserPrincipalName `
-    -From Address@Domain.com `
-    -Cc Address@Domain.com `
-    -Subject "Password Notice - Your password will expire $($TimeframeString)" `
-    -BodyAsHtml "Hello $($Account.GivenName),<BR>
-    <BR>
-    This is an automated reminder that your password will be expiring $($TimeframeString)
-    on $((Get-Date).AddDays(14).ToShortDateString()).<BR>
-    You can press Ctrl+Alt+Del to bring up a screen where you can change your password.<BR>
-    <BR>
-    Sincerely,<BR>The <Company> IT Team"
+$EmailBody = @"
+Hello $($Account.GivenName),<BR>
+<BR>
+This is an automated reminder that your password will be expiring $($TimeframeString) 
+on $($Account.PasswordLastSet.AddDays($maxPwdAge).Date.ToShortDateString()).<BR>
+You can press Ctrl+Alt+Del to bring up a screen where you can change your password.<BR>
+<BR>
+Sincerely,<BR>
+The <company> IT Team"
+"@
+
+$MessageParams = @{
+        To = $Account.UserPrincipalName
+        SMTPServer = "Server.Domain.com"
+        From = "Address@Domain.com"
+        Subject = "Password Notice - Your password will expire $($TimeframeString)"
+        BodyAsHtml = $true
+        Body = $EmailBody
+        }
+
+Send-MailMessage @MessageParams
         
 }
 
