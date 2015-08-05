@@ -32,7 +32,7 @@ Function CheckPasswordAge() {
     ForEach($Account in $Accounts) {
         
         If($Account.PasswordLastSet.Date -eq $14days.Date) {
-            SendNotifcationEmail "in 2 weeks"
+            SendNotificationEmail "in 2 weeks"
         
         }
 
@@ -47,7 +47,7 @@ Function CheckPasswordAge() {
         }
 
         ElseIf($Account.PasswordLastSet.Date -eq $1day.Date) {
-            SendNotficationEmail "tomorrow"    
+            SendNotificationEmail "tomorrow"    
         
         }
     }
