@@ -1,0 +1,109 @@
+Function Get-CSV() {
+#Check for existing csv containing remaining PC list and query AD for PCs if not found
+
+    $csvPath = "C:\Scripts\Input\"
+    $csvNameFull = Get-Item -Path "$($csvPath)MyTest*.csv" | Select Name
+    $csvName = "MyTest"
+
+    If($csvNameFull -eq $null) {
+        
+        $csvNewRuns = 1
+        $computers = Get-ADComputer -Filter * | Where {$_.Enabled -eq $true}
+        Get-PingTest       
+
+    }
+    
+    Else {
+        
+        #The substring position will depend on your choice of csv file name length
+        $csvRuns = $csvNameFull.Substring(7,1)
+        [int]$csvNewRuns = 1 + $csvRuns
+        $computers = Import-Csv -Path $csvPath$csvNameFull
+        Get-PingTest
+
+    }
+    
+}
+
+Function Get-PingTest() {
+#Obtain list of PCs from csv or AD query and test connections. Place inactive PCs back in csv for later runs.
+    
+    $pingTest = $null
+    $offPCs = @()
+    $PCs = @()
+    $i = 1
+    
+    ForEach($computer in $computers) {
+
+        Write-Progress -Activity "Pinging Computers..." -PercentComplete ($i/$computers.count*100)
+        $pingTest = Test-Connection -CN $computer.dnshostname -Count 1 -BufferSize 16 -Quiet
+        $i++
+
+        If($pingTest -match 'False') {
+  
+            $offPCs += $computer
+
+        }
+
+        Else {
+
+            $PCs += $computer
+
+        }
+
+    }
+
+$Path = "{0}{1} Runs-{2} PCsLeft-{3}.csv" -f $csvPath,$csvName,$csvNewRuns,$offPCs.Count
+$offPCs | Select Name | Export-Csv -Path $Path -NoTypeInformation
+#Search-Shortcuts
+
+}
+
+Function Search-Shortcuts() {
+#Obtain all .lnk files from all profile desktops and check for old server name and replace with new server name. Also create csv with before and after target paths.
+
+    $credential = Get-Credential
+    $Field1 = @()
+    $Field2 = @()
+    $Field3 = @()
+    $colFields = @()
+
+    ForEach($computer in $PCs) {
+
+        $Field1 += $computer.Name
+
+        New-PSDrive -Name $computer.Name -PSProvider FileSystem -Root \\$($computer.Name)\c$ -Credential $credential
+
+        $oldPath1 = "\\metrofs1\*"
+        $oldPath2 = "\\jobserver\*"
+        $newPath = "\\metropolitanind.local\files\"
+        $shell = New-Object -ComObject WScript.Shell
+        $desktop = "$($computer.Name):\Users\*\Desktop"
+
+        $shortcuts = Get-ChildItem -Path $desktop -Filter "*.lnk" -Recurse
+
+        ForEach($file in $shortcuts) {
+            
+            $Field2 += $file.FullName
+            $link = $shell.CreateShortcut($file.FullName)
+            $currentPath = $link.TargetPath
+
+            If(($currentPath -like $oldPath1) -or ($currentPath -like $oldPath2)) {
+
+                $splitPaths = (($link.TargetPath).Remove(0,2)).Split("\\",2)
+                $modifiedPath = $newPath+$splitPaths[1]
+                $link.TargetPath = $modifiedPath
+                $link.Save()
+                $Field3 += $modifiedPath
+            }
+
+        }
+
+    }
+    
+    $colFields = $Field1+$Field2+$Field3
+    $colFields | Export-Csv -Path "C:\Scripts\Output\Shortcut-Check-Results.csv" -NoTypeInformation
+
+}
+
+Get-CSV
