@@ -1,3 +1,14 @@
+<#
+.Description
+ This script obtains a list of computers from a csv file if present or queries AD for all enabled PC objects.
+ It then checks the connection to those PCs and separates those that responded vs those that didn't.
+ With those that responded, it obtains the .lnk files from all profile desktops and modifies them from an old file server
+ location to a new one.
+.Notes
+ AUTHOR: Ryan Simeone
+ LASTEDIT: 8/28/2015 4:50 PM UTC
+#>
+
 Function Get-CSV() {
 #Check for existing csv containing remaining PC list and query AD for PCs if not found
 
